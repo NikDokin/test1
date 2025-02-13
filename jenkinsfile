@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = Test_image1
+        CONTAINER_NAME = Test_container1
+        REPO_URL = https://github.com/NikDokin/test1.git
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: env.REPO_URL
+            }
+        }
+
+        stage('Stop and Remove Old Container') {
+            steps {
+                script {
+                    sh "docker stop ${env.CONTAINER_NAME} || true"
+                    sh "docker rm ${env.CONTAINER_NAME} || true"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${env.DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    sh "docker run -d --name ${env.CONTAINER_NAME} ${env.DOCKER_IMAGE}"
+                }
+            }
+        }
+    }
+}
